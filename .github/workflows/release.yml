@@ -16,14 +16,18 @@ jobs:
       - name: Build + sign ShairKindle.azw2
         run: docker compose -f docker/docker-compose.yml run --build --rm build
       - name: Generate SHA256SUMS
+        # kindlet/out is root-owned (docker build writes it via the mount), so write the
+        # checksum file to the runner-writable temp dir. The bare filename in it keeps
+        # `sha256sum -c SHA256SUMS` working next to the downloaded azw2.
         run: |
           test -f kindlet/out/ShairKindle.azw2 || { echo "azw2 missing"; exit 1; }
-          ( cd kindlet/out && sha256sum ShairKindle.azw2 > SHA256SUMS && cat SHA256SUMS )
+          ( cd kindlet/out && sha256sum ShairKindle.azw2 ) > "$RUNNER_TEMP/SHA256SUMS"
+          cat "$RUNNER_TEMP/SHA256SUMS"
       - name: Publish GitHub Release with the signed .azw2 + checksums
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${{ github.ref_name }}" \
-            kindlet/out/ShairKindle.azw2 kindlet/out/SHA256SUMS \
+            kindlet/out/ShairKindle.azw2 "$RUNNER_TEMP/SHA256SUMS" \
             --title "shairkindle ${{ github.ref_name }}" \
             --notes "Signed \`ShairKindle.azw2\` for the jailbroken Kindle Keyboard (K3). Verify the download with \`sha256sum -c SHA256SUMS\`. See the README to install and SECURITY.md for the trust model. Experimental software, provided as-is."
