@@ -1,0 +1,33 @@
+Written Offer for Corresponding Source (GNU GPL v3)
+===================================================
+
+shairkindle bundles ONE GPLv3-or-later binary:
+
+  * extension/bin/fbink — NiLuJe's FBInk CLI (https://github.com/NiLuJe/FBInk).
+
+FBInk is distributed and executed as a SEPARATE program; shairkindle does not link
+against libfbink. shairkindle's own original code is licensed under MIT (see LICENSE),
+while this separately distributed FBInk executable remains covered by GPLv3-or-later.
+Other third-party components carry their own licenses -- see THIRD-PARTY-NOTICES.md.
+
+Where the corresponding source is
+---------------------------------
+The complete Corresponding Source for extension/bin/fbink -- including any build/install
+scripts needed to build and run it -- is FBInk upstream at commit
+83110d3d278cf9cd44cc1d16237e284a89f72633 (FBInk v1.25.0-535-g83110d3d), published at
+https://github.com/NiLuJe/FBInk (check out that commit), and also mirrored in
+best-effort-labs/kinduino at fbinkd/third_party/FBInk (a git submodule pinned to that
+exact commit; kinduino v0.5.2-30-g091891f, from whose fbinkd/fbink.armv6 this binary
+was taken). The bundled binary is that build artifact with debug/symbol sections
+removed (`arm-none-eabi-strip -s`); the Corresponding Source and the kinduino fbinkd
+build recipe (Makefile + toolchain config) are unchanged by that step.
+
+The offer
+---------
+To anyone who possesses this fbink binary, we offer to provide the complete
+machine-readable Corresponding Source under GPLv3, either by free download from a network
+server or, on request, on a durable physical medium for no more than our reasonable cost
+of physically providing it. This offer is valid for at least three years from our last
+distribution of this binary. The source is already available online at no cost (above);
+this written offer satisfies GPLv3 §6 for anyone who received the binary without it.
+Request via besteffortlabs@heliodox.com.

@@ -1,0 +1,31 @@
+#!/bin/sh
+# Toggle "AirPlay over WiFi". Flips the WIFI flag in the config, and if raopd is
+# running, opens/closes the wlan0 firewall live. The advertised interface only
+# moves on the next Enable/Disable AirPlay -- a clean daemon restart so mDNS
+# sends its goodbye and re-announces on the new iface; a hot-swap would strand a
+# stale A record (tinysvcmdns withdraws the SRV/PTR but not the A on stop).
+here=$(cd "$(dirname "$0")" && pwd)
+. "$here/airplay-lib.sh"
+PREFIX="${AIRPLAY_PREFIX:-/var/local/shairkindle}"
+
+[ "$(airplay_wifi_on)" = true ] && new=false || new=true
+
+mkdir -p "$(dirname "$CONFIG")"
+if [ -f "$CONFIG" ] && grep -q '^WIFI=' "$CONFIG"; then
+    sed "s/^WIFI=.*/WIFI=$new/" "$CONFIG" > "$CONFIG.tmp" && mv "$CONFIG.tmp" "$CONFIG"
+else
+    echo "WIFI=$new" >> "$CONFIG"
+fi
+
+# Apply live only while the daemon is up; otherwise airplay-on applies it at start.
+# NB: the advertised interface doesn't move until the next Enable/Disable AirPlay,
+# so a live enable opens the firewall + disables power-save but the daemon still
+# advertises its old iface until you re-cycle.
+pid=$(cat "$PREFIX/raopd.pid" 2>/dev/null)
+if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    if [ "$new" = true ]; then
+        airplay_fw_open;  airplay_wifi_maxperf
+    else
+        airplay_fw_close; airplay_wifi_powersave
+    fi
+fi

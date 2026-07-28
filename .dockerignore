@@ -1,0 +1,13 @@
+# The Dockerfile COPYs nothing from the build context (the repo is volume-mounted at
+# runtime), so this just trims what's sent to the daemon on `docker compose build`.
+.git
+.github
+out-armv6
+kindlet/out
+kindlet/classes
+kindlet/stub-classes
+kindlet/payload
+kindlet/spike
+**/*.o
+**/*.class
+.DS_Store

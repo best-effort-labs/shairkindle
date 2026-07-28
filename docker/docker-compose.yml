@@ -1,0 +1,22 @@
+# One image, two entrypoints. `build` produces the release artifacts; `test` runs
+# the host unit suite (same image CI uses, so local == CI).
+#   docker compose -f docker/docker-compose.yml run --rm build   # raopd + signed kindlet
+#   docker compose -f docker/docker-compose.yml run --rm test    # make check
+services:
+  build:
+    build: &image
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: shairkindle-build
+    volumes:
+      - ..:/work
+
+  test:
+    build: *image
+    image: shairkindle-build
+    volumes:
+      - ..:/work
+    # clean first: the mount is shared with the host, and make keys off mtimes — a
+    # stale host-built (macOS/arm64) object or helper binary would otherwise be reused
+    # in the Linux container and fail with an exec-format error.
+    entrypoint: ["sh", "-c", "make clean && make check"]

@@ -1,0 +1,29 @@
+#!/bin/sh
+here=$(cd "$(dirname "$0")" && pwd)
+. "$here/airplay-lib.sh"
+PREFIX="${AIRPLAY_PREFIX:-/var/local/shairkindle}"
+# Stage markers (>&2 -> supervisor.log) name the step in case one wedges under
+# the supervisor's bounded run_script (see airplay-on for the rationale).
+echo "[airplay-off] fw_close" >&2
+airplay_fw_close                                # never leave wlan0 open when off
+echo "[airplay-off] wifi_powersave" >&2
+airplay_wifi_powersave                          # restore AR6000 power-save (battery)
+echo "[airplay-off] kill raopd" >&2
+[ -f "$PREFIX/raopd.pid" ] || exit 0
+pid=$(cat "$PREFIX/raopd.pid" 2>/dev/null)
+case "$pid" in
+    ''|*[!0-9]*) rm -f "$PREFIX/raopd.pid"; exit 0 ;;   # empty/garbage: nothing safe to kill
+esac
+if pid_looks_like_raopd "$pid"; then
+    kill -TERM "$pid" 2>/dev/null || true
+    i=0
+    while [ $i -lt 10 ]; do
+        kill -0 "$pid" 2>/dev/null || break
+        pid_looks_like_raopd "$pid" || break            # PID recycled mid-wait: back off
+        sleep 1; i=$((i+1))
+    done
+    if kill -0 "$pid" 2>/dev/null && pid_looks_like_raopd "$pid"; then
+        kill -KILL "$pid" 2>/dev/null || true
+    fi
+fi
+rm -f "$PREFIX/raopd.pid"

@@ -1,0 +1,8 @@
+#!/bin/sh
+# Compatibility/information stub. shairkindle has no separate setup step.
+# The device owner must install the ixtab jailbreak/KUAL environment first.
+# On launch, the Kindlet uses that existing runtime gateway and copies its own
+# payload to /var/local/shairkindle. It does not edit external.policy or install a
+# jailbreak. See README.md, "What the jailbreak gateway changes".
+echo "No setup command is required. Launch ShairKindle from Home."
+exit 0

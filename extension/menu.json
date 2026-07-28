@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "name": "AirPlay",
+      "items": [
+        { "name": "Setup info (not required)", "action": "./bin/setup", "exitmenu": true },
+        { "name": "Enable AirPlay",  "action": "./bin/airplay-on",  "exitmenu": true },
+        { "name": "Disable AirPlay", "action": "./bin/airplay-off", "exitmenu": true },
+        { "name": "Enable AirPlay over WiFi",  "action": "./bin/airplay-wifi",
+          "if": "\"/var/local/shairkindle/config\" \"^WIFI=false$\" -g",
+          "exitmenu": true },
+        { "name": "Disable AirPlay over WiFi (USB only)", "action": "./bin/airplay-wifi",
+          "if": "\"/var/local/shairkindle/config\" \"^WIFI=true$\" -g",
+          "exitmenu": true }
+      ]
+    }
+  ]
+}

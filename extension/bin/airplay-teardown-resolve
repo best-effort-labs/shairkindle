@@ -1,0 +1,24 @@
+#!/bin/sh
+# Print the VALIDATED airplay-supervisor group-leader PID (empty if none). The
+# caller (kindlet teardownAndWait) then signals the whole group -<pid>. Timing
+# lives in the caller (Java Thread.sleep), not here because BusyBox sleep has no
+# reliable sub-second granularity. Validation is done here because killing the
+# wrong group as root is the real hazard.
+here=$(cd "$(dirname "$0")" && pwd)
+. "$here/airplay-lib.sh"
+PREFIX="${AIRPLAY_PREFIX:-/var/local/shairkindle}"
+pidfile="$PREFIX/supervisor.pid"
+if [ -f "$pidfile" ]; then
+    pid=$(awk 'NR==1{print $1}'  "$pidfile" 2>/dev/null)
+    start=$(awk 'NR==1{print $2}' "$pidfile" 2>/dev/null)
+    if supervisor_pid_valid "$pid" "$start"; then printf '%s\n' "$pid"; exit 0; fi
+fi
+# missing/invalid pidfile -> bounded ps fallback on 'airplay-super' (bracketed so
+# awk doesn't self-match). The fallback pid is a root group-kill target too, so it
+# MUST pass the same leader validation (exe + PID==PGID==SID); no starttime token
+# is available here; never signal an unvalidated group.
+pid=$(ps 2>/dev/null | awk '/[a]irplay-super/{print $1; exit}')
+case "$pid" in ''|*[!0-9]*) exit 0 ;; esac
+supervisor_leader_ok "$pid" || exit 0
+printf '%s\n' "$pid"
+exit 0

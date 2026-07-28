@@ -1,0 +1,16 @@
+# build output
+out/
+classes/
+stub-classes/
+test-classes/
+payload/
+nolimits.props
+cover.png
+# proprietary / secret — never commit
+Kindlet-1.2.jar
+*.keystore
+# EXCEPT: developer.keystore is the PUBLIC jailbreak dev keystore (aliases ditest/
+# dktest/dntest, password "password") — intentionally committed for turnkey signing,
+# NOT a secret. Its private keys are public; it provides package identity, not
+# publisher authenticity. See README / SECURITY.md.
+!developer.keystore

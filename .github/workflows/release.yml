@@ -1,0 +1,26 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      # Build + sign the release artifact in the same image CI uses, so the
+      # published .azw2 is reproducible from exactly this tag.
+      - name: Build + sign ShairKindle.azw2
+        run: docker compose -f docker/docker-compose.yml run --build --rm build
+      - name: Publish GitHub Release with the signed .azw2
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test -f kindlet/out/ShairKindle.azw2 || { echo "azw2 missing"; exit 1; }
+          gh release create "${{ github.ref_name }}" \
+            kindlet/out/ShairKindle.azw2 \
+            --title "shairkindle ${{ github.ref_name }}" \
+            --notes "Signed \`ShairKindle.azw2\` for the jailbroken Kindle Keyboard (K3). See the README to install and SECURITY.md for the trust model. This is experimental software provided as-is."

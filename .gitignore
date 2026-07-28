@@ -1,0 +1,29 @@
+/out-armv6/
+/vendor/alac/*.o
+/tests/sdec-*.o
+/tests/sthr-*.o
+/tests/sflu-*.o
+/tests/smoke-*.o
+/tests/smoke-raopd
+/tests/supervisor-hostcheck
+/tests/rtsp_probe
+/tests/fake_consumer
+/tests/test_smoke
+/tests/fake_nprender
+/tests/test_*
+!/tests/test_*.c
+!/tests/test_*.cpp
+!/tests/test_*.sh
+# airport.pem: a stray generation artifact only — UNUSED by the build. The AirPort
+# Express RSA key is the PUBLIC, well-known RAOP key and is deliberately embedded as C
+# arrays in src/airport_key.c. Nothing secret here; this line just keeps the scratch
+# .pem out of the tree.
+airport.pem
+# host BearSSL build output (compiled from vendor/bearssl/src by `make check`)
+/vendor/bearssl/src/**/*.o
+/vendor/bearssl/libbearssl.a
+
+# Local AI-assistant working context. Deliberately excluded from the public
+# release repository; it contains contributor workflow guidance, not project
+# documentation required by users or builders.
+/CLAUDE.md

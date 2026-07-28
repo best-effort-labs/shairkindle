@@ -1,0 +1,118 @@
+#!/bin/sh
+# airplay-nowplaying MODE ARTPATH TITLEFILE ARTISTFILE ALBUMFILE
+#
+# Draws the now-playing card (album art + title/artist/album) over the LIVE
+# reader framework via fbink, on e-ink. Invoked ONLY by raopd's render worker
+# (src/nprender.c) with a FIXED argv of paths + a mode token -- the track
+# metadata is in the TEXT FILES, never on this command line (no shell injection).
+#
+# MODE: draw   = light redraw (metadata changed, same track)
+#       flash  = region flash of the card area (new track -- clears ghosting, leaves chrome)
+#       splash = not playing (idle/no sender) -- waiting-for-a-sender card
+#
+# Runs off raopd's RTSP loop (the worker forks+waits us), so a slow fbink here
+# only delays the next redraw -- it can never affect audio/RTSP.
+#
+# BusyBox /bin/sh only: no bashisms, no `grep -E`, no `nohup`/`setsid`.
+
+here=$(cd "$(dirname "$0")" && pwd)
+# fbink: honor an explicit $FBINK; else prefer a pre-installed usbnet fbink (may be
+# newer); else the copy bundled beside this script (so the install needs no usbnet).
+if [ -z "$FBINK" ]; then
+    for _c in /mnt/us/usbnet/bin/fbink "$here/fbink"; do
+        [ -x "$_c" ] && FBINK="$_c" && break
+    done
+fi
+# Assets live under the application prefix as share/*. Never resolve them
+# through a parent directory; the flat installed layout stays prefix-contained.
+SPLASH_IMG="${AIRPLAY_SPLASH_IMG:-$here/share/splash.png}"
+ART_PLACEHOLDER="${AIRPLAY_ART_PLACEHOLDER:-$here/share/art-placeholder.png}"
+# Row for the splash box name (fbink char-row) + pixel voffset. Pinned against the
+# real asset on the K3: row -16 lands the 16px glyph ~5px above the box
+# center (interior y~557), then -Y 8 nudges it to dead-center/a hair below.
+# negative row = counted from the bottom, like the metadata rows.
+NAME_ROW="${AIRPLAY_NAME_ROW:--16}"
+NAME_YOFF="${AIRPLAY_NAME_YOFF:-8}"
+mode="$1"; art="$2"; tf="$3"; af="$4"; lf="$5"
+
+# fbink absent (e.g. usbnet not mounted) -> quietly do nothing; a display failure
+# is always cosmetic and must never look like an error to the caller.
+[ -x "$FBINK" ] || exit 0
+
+# --- tunables (K3 panel 600x800, ~48px top chrome; iOS art is 512x512) ---
+# Art is drawn valign=TOP at y=CHROME_Y, so it occupies y=[48,560]. The metadata
+# is bottom-anchored with fbink NEGATIVE rows (counted from the last row up): that
+# keeps text clear of the art for any art size/font height without measuring either
+# (an absolute-row layout landed text on top of the 512px art). Title highest.
+CHROME_Y=48        # px: draw art below the framework's top status strip
+TITLE_ROW=-6
+ARTIST_ROW=-4
+ALBUM_ROW=-2
+
+# Read the pre-sanitized one-line fields (the worker already stripped control
+# bytes + newlines and bounded the length; each file is a single clean line).
+title=$(cat "$tf" 2>/dev/null)
+artist=$(cat "$af" 2>/dev/null)
+album=$(cat "$lf" 2>/dev/null)
+
+# Draw one centered text line at character-row $1 with the (quoted) string $2.
+# `--` terminates fbink option parsing so a title like "--help" is drawn as text,
+# not misread as a flag (fbink treats a leading `--`-string as an option).
+draw_line() {
+    [ -n "$2" ] || return 0
+    "$FBINK" -q -m -y "$1" -- "$2" 2>/dev/null
+}
+
+# Flash the card band (below the top chrome) clean before a new track/layout.
+# The K3 is a legacy einkfb device where fbink's hardware -f flash is NOT
+# honored, so a plain -k clear leaves the previous cover ghosted and successive
+# tracks pile up. Force a real pixel swing by painting the region BLACK then
+# WHITE (validated on device). Costs one extra e-ink update, only on a
+# track/layout change -- never during steady playback.
+CARD_REGION="top=$CHROME_Y,left=0,width=600,height=$((800 - CHROME_Y))"
+flash_band() {
+    "$FBINK" -q -B BLACK -k"$CARD_REGION" 2>/dev/null
+    "$FBINK" -q -B WHITE -k"$CARD_REGION" 2>/dev/null
+}
+
+case "$mode" in
+    splash)
+        # Waiting-for-a-sender card. Flash the card band clean (leaves the top
+        # chrome strip), paint the pre-built splash image, then overlay the
+        # configured name centered in the box.
+        flash_band
+        if [ -f "$SPLASH_IMG" ]; then
+            "$FBINK" -q -g "file=$SPLASH_IMG,valign=TOP,y=$CHROME_Y,dither" 2>/dev/null
+        else
+            # fbink is present (checked above) but a manifest-provided asset is
+            # not -> packaging defect, not optional-degradation. Log it (-> raopd's
+            # airplay.log) so it's never again a silent no-op. See kindlet-shell
+            # Keep every asset lookup within the application prefix.
+            echo "[airplay-nowplaying] splash asset missing: $SPLASH_IMG (payload not installed?)" >&2
+        fi
+        name="${AIRPLAY_NAME:-ShairKindle}"
+        "$FBINK" -q -m -y "$NAME_ROW" -Y "$NAME_YOFF" -- "$name" 2>/dev/null
+        ;;
+    draw|flash)
+        # New track (flash): flash the card area clean only (never the chrome).
+        [ "$mode" = flash ] && flash_band
+        # Art: real cover if present, else the ShairKindle glyph placeholder so
+        # the art frame is never blank (radio/podcasts/artless senders).
+        if [ -f "$art" ]; then
+            "$FBINK" -q -g "file=$art,halign=CENTER,valign=TOP,y=$CHROME_Y,dither" 2>/dev/null
+        elif [ -f "$ART_PLACEHOLDER" ]; then
+            "$FBINK" -q -g "file=$ART_PLACEHOLDER,halign=CENTER,valign=TOP,y=$CHROME_Y,dither" 2>/dev/null
+        else
+            # No real art (normal: artless sender) AND no placeholder (defect:
+            # the placeholder is a manifest-provided asset that should exist).
+            echo "[airplay-nowplaying] art-placeholder missing: $ART_PLACEHOLDER (payload not installed?)" >&2
+        fi
+        draw_line "$TITLE_ROW"  "$title"
+        draw_line "$ARTIST_ROW" "$artist"
+        draw_line "$ALBUM_ROW"  "$album"
+        ;;
+    *)
+        exit 0
+        ;;
+esac
+exit 0
