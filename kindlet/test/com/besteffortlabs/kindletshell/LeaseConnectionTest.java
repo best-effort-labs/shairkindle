@@ -116,10 +116,15 @@ public class LeaseConnectionTest {
         prod.start();
         // Read frames until we see the last key (keyCode N-1); assert monotonic seq.
         InputStream in = s.getInputStream();
+        s.setSoTimeout(2000);   // don't hang the suite if heartbeats never arrive -> fail loud
         byte[] f = new byte[6];
         int prevSeq = -1, heartbeats = 0;
         boolean sawLast = false;
-        for (int guard = 0; guard < N * 4 && !sawLast; guard++) {
+        // Read until we've seen BOTH the last key AND a heartbeat. Heartbeats fire on an
+        // idle write queue (period heartbeatMs), so once the producer finishes and the
+        // queue drains, one is minted deterministically -- no dependence on the heartbeat
+        // happening to land in a 2ms inter-key gap (that timing race made this flaky on CI).
+        for (int guard = 0; guard < N * 8 && !(sawLast && heartbeats > 0); guard++) {
             int off = 0; while (off < 6) { int r = in.read(f, off, 6 - off); if (r < 0) throw new Exception("EOF"); off += r; }
             int kind = f[0] & 0xff;
             int seq  = ((f[4] & 0xff) << 8) | (f[5] & 0xff);
