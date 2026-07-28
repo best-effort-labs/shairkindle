@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Kindle jailbreaking / device setup help
+    url: https://kindlemodding.org/
+    about: >-
+      Jailbreaking, KUAL, usbnet and device-specific setup are out of scope here — the Kindle
+      Modding Discord is the active hub and a much better place to ask.
+
+  - name: MobileRead forums & wiki
+    url: https://www.mobileread.com/
+    about: >-
+      The long-form archive of Kindle-hacking knowledge (KUAL, usbnet, per-model pages).

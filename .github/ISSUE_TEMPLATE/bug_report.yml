@@ -1,0 +1,75 @@
+name: Bug report
+description: Something reproducible that shairkindle gets wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Two things to check **first** — both imitate a shairkindle bug:
+
+        1. **Is the K3 jailbroken with KUAL installed?** shairkindle does not jailbreak a stock
+           device — it uses the gateway you've already set up.
+        2. **Are the Kindle and your sender on the same Wi-Fi network?** If "ShairKindle" doesn't
+           appear in the AirPlay picker, this is almost always why.
+
+        Also: **no audio on the very first launch after a cold reboot** is a known warm-up quirk —
+        press Home and reopen before filing.
+
+  - type: checkboxes
+    id: prechecks
+    attributes:
+      label: Before filing
+      options:
+        - label: The K3 is jailbroken and KUAL is installed
+          required: true
+        - label: The Kindle and my sender are on the same Wi-Fi network
+          required: true
+        - label: I've read the README (install + troubleshooting)
+          required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happens, and what you expected
+      placeholder: The now-playing card shows but there's no audio. I expected...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: supervisor.log and airplay.log
+      description: |
+        From `/var/local/shairkindle/`. Logging is off by default — enable it by creating an empty
+        `shairkindle-debug` file at the root of the Kindle's USB drive (or `touch
+        /mnt/us/shairkindle-debug` over ssh), relaunch, reproduce, then attach both logs. See the
+        README's *Debug logging* section.
+
+        ⚠️ **Redact your Wi-Fi IP and the sender's IP/name from `airplay.log` first** — nobody needs
+        them to debug this.
+      render: text
+    validations:
+      required: false
+
+  - type: input
+    id: fw
+    attributes:
+      label: K3 firmware version
+      placeholder: "3.4.3"
+    validations:
+      required: true
+
+  - type: input
+    id: sender
+    attributes:
+      label: Sender device + OS version
+      placeholder: "iPhone 13, iOS 17.x  /  MacBook Air, macOS 14.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you already tried
+    validations:
+      required: false
