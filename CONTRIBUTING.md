@@ -46,8 +46,10 @@ reboot** (the Kindle's audio mixer needs a warm-up) — press Home and reopen. R
 
 **Check these first** — the two most common failures both imitate a shairkindle bug:
 
-1. **Is the K3 actually jailbroken with KUAL installed?** shairkindle does not jailbreak a stock
-   device — it calls the gateway you've already set up. Without it, launching does nothing useful.
+1. **Does KUAL itself open?** shairkindle is a developer-signed app like KUAL. If KUAL fails with
+   *"not signed by a registered developer,"* your Kindle's developer certificates expired
+   (2025-04-17) — install the refresh (see the README's *Developer certificates* section).
+   shairkindle needs exactly the same trust, nothing extra.
 2. **Are the Kindle and your sender on the same Wi-Fi network?** If "ShairKindle" doesn't appear in
    the AirPlay picker, this is almost always why.
 

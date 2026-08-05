@@ -22,6 +22,8 @@ body:
       options:
         - label: The K3 is jailbroken and KUAL is installed
           required: true
+        - label: KUAL itself opens (so my developer certificates are current — the originals expired 2025-04-17)
+          required: true
         - label: The Kindle and my sender are on the same Wi-Fi network
           required: true
         - label: I've read the README (install + troubleshooting)

@@ -23,7 +23,36 @@ device's AirPlay picker at your Kindle and press play.
 - The **ixtab jailbreak + KUAL** already installed on it. shairkindle does **not** jailbreak
   a stock Kindle — it uses the jailbreak you've already set up. If your Kindle isn't
   jailbroken yet, do that first (that's a separate project).
+- **Current Kindle developer certificates** — the trust that lets a jailbroken Kindle run
+  sideloaded apps at all. The original certs **expired 2025-04-17**. If KUAL itself opens for
+  you today you already have the refresh; if not, see
+  [Developer certificates](#developer-certificates) below. shairkindle needs exactly what KUAL
+  needs — nothing extra.
 - An AirPlay sender on the **same Wi-Fi network** — an iPhone/iPad, or a Mac.
+
+## Developer certificates
+
+shairkindle is a developer-signed Kindlet, so your Kindle has to **trust the current KDK
+developer certificates** — the same requirement as KUAL and every other sideloaded app, nothing
+shairkindle-specific. Amazon's original developer certs **expired 2025-04-17**. If yours are
+missing or expired, opening shairkindle (or KUAL, or anything sideloaded) fails with:
+
+> *This title is not signed by a registered developer.*
+
+The fix is the community **developer-certificate refresh** — a one-time device update, not a
+shairkindle download. For the K3:
+
+1. Get the current **DevCerts** keystore-update package (e.g. `DevCerts-20250419-KeyStore.zip`)
+   — search the [MobileRead forums](https://www.mobileread.com/) or the
+   [Kindle Modding wiki/Discord](https://kindlemodding.org/) for the latest "developer certificate
+   update."
+2. Extract the `.bin` for **your** K3 model (e.g. `Update_mkk-20250419-k3g-…-keystore-install.bin`)
+   and copy it to the **root** of the Kindle's USB drive; eject.
+3. On the Kindle: **Home → Menu → Settings → Menu → Update Your Kindle.** It applies the update
+   and restarts.
+
+KUAL and shairkindle will then open. (This is standard jailbroken-Kindle housekeeping — the same
+step every sideloaded app has needed since April 2025.)
 
 ## Install
 
@@ -76,6 +105,9 @@ The log is written to `/var/local/shairkindle/airplay.log` (fresh each launch). 
 
 ## Troubleshooting
 
+- **"This title is not signed by a registered developer."** Your Kindle's developer certificates
+  are missing or expired (the originals lapsed 2025-04-17). Install the certificate refresh — see
+  [Developer certificates](#developer-certificates). (KUAL won't open either until you do.)
 - **"ShairKindle" doesn't appear in the AirPlay picker.** Make sure the app is open on the
   Kindle (splash screen showing) and that your phone/Mac is on the **same Wi-Fi network**.
   The Kindle's Wi-Fi can be slow to wake — give it a few seconds, or reopen the picker.
